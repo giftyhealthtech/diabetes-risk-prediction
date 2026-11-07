@@ -1,0 +1,5 @@
+# virtual env
+venv/
+
+# dataset
+brfss_survey_data_2024.csv
