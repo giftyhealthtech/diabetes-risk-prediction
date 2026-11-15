@@ -4,9 +4,6 @@ venv/
 # dataset
 brfss_survey_data_2024.csv
 
-# Trained model artifacts
-*.joblib
-*.pkl
 
 # Python
 __pycache__/
