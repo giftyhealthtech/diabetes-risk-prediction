@@ -8,6 +8,10 @@ The project includes data preprocessing, model training, prediction, a REST API 
 **API Documentation:** https://diabetes-risk-prediction-tmkn.onrender.com/docs  
 **Health Check:** https://diabetes-risk-prediction-tmkn.onrender.com/health
 
+## Problem Statement
+
+Diabetes is common, and many people are not screened until late. This project builds a simple model that uses basic survey answers (age, BMI, general health, lifestyle) to flag respondents whose profile looks like that of people who reported diabetes.
+
 ## Project Overview
 
 This project explores how machine learning can identify patterns associated with self-reported diabetes status using selected demographic, health, and lifestyle variables.
@@ -62,19 +66,30 @@ A reduced dataset containing only the selected features and target variable is p
 
 The original full BRFSS dataset is not included in the repository because of its size.
 
+## EDA Summary
+
+- **Size after cleaning:** 457,670 rows reduced to 383,775 (respondents with prediabetes, pregnancy-only diabetes, or unknown/refused answers removed).
+- **Class balance:** 85.1% no diabetes, 14.9% diabetes. The data is imbalanced, so accuracy alone is not a good metric.
+- **Missing data:** BMI is missing for 5.4% of respondents, at a similar rate in both classes. It was filled using median imputation.
+- **BMI:** Right-skewed (mean 28.5, median 27.4). One extreme value (99.8) looks unrealistic.
+- **Strongest patterns:** Diabetes rate rises from 3.3% (excellent health) to 37.4% (poor health). It also rises with age, from 1.4% (18-24) to 24.9% (75-79). It is higher in obese respondents (23.4% vs 7.5% for normal weight), in those with heart disease (36.4% vs 13.4%), and in those who did not exercise (24.6% vs 12.0%).
+- **Weak patterns:** Sex and smoking status showed small differences.
+- **Surprising result:** Heavy drinkers had a lower diabetes rate (7.1% vs 15.4%). This is probably due to under-reporting or other factors, so it should not be read as "drinking protects against diabetes."
+- **BMI and BMI category:** They are strongly correlated (0.83), so only numeric BMI is used.
+
 ## Machine Learning Approach
 
 The project follows these steps:
 
 1. Data exploration and preprocessing.
 2. Feature selection.
-3. 70/15/15 train, validation and test split (stratified).
+3. 70/15/15 stratified train, validation and test split.
 4. Smoking status one-hot encoded.
-3. Missing-value imputation using the training data.
-4. Model training using Logistic Regression, DecisionTreeClassifier, and RandomForestClassifier.
-5. Model evaluation and threshold selection.
-8. Final model refitted on training and validation data, then evaluated once on the test set
-6. Saving the trained model as a Joblib artifact.
+5. Missing-value imputation using the training data.
+6. Model training using Logistic Regression, DecisionTreeClassifier, and RandomForestClassifier.
+7. Model evaluation and threshold selection.
+8. Final model refitted on training and validation data, then evaluated once on the test set.
+9. Saving the trained model as a Joblib artifact.
 
 ### Final Model
 
@@ -207,7 +222,7 @@ Use the interactive `/docs` page to verify the accepted input values and submit 
   "prediction": 0,
   "probability": 0.0183,
   "probability_percentage": "1.83%",
-  "message": "The model did not identify a pattern associated with self-reported diabetes in the survey data. This does not rule out diabetes. Consider routine blood glucose testing and consult a healthcare professional if you have concerns.",
+  "message": "This does not rule out diabetes. Consider routine blood glucose testing and consult a healthcare professional if you have concerns.",
   "disclaimer": "This tool is for educational purposes only and is not a medical diagnostic tool."
 }
 ```
@@ -258,6 +273,18 @@ https://diabetes-risk-prediction-tmkn.onrender.com
 - Predictions represent estimated probabilities of belonging to the survey's diabetes class, not an individual's clinical probability of developing diabetes.
 - The model is not a diagnostic tool and must not replace laboratory testing or professional medical evaluation.
 - Model performance may vary across populations and settings.
+- Key factors like blood sugar, family history, blood pressure, and diet are not included.
+- BRFSS covers US adults, so the model may not work well for other populations.
+- The model cannot identify early-stage or borderline cases.
+- Type 1 and Type 2 are grouped together.
+
+## Next Steps
+
+- Add more features (for example blood pressure, cholesterol, family history) to improve precision.
+- Try other models, such as gradient boosting, and compare them with Logistic Regression.
+- Handle the BMI outlier and test other ways of filling missing values.
+- Add input range checks (for example realistic BMI values) in the API.
+- Check performance across age and sex groups.
 
 ## Technologies Used
 

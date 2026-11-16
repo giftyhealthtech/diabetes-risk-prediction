@@ -42,16 +42,12 @@ def make_prediction(data: DiabetesInput):
 
         if prediction == 1:
             message = (
-                "The model identified a pattern associated with "
-                "self-reported diabetes in the survey data. "
                 "This result does not confirm that you have diabetes. "
                 "Please visit a healthcare facility for appropriate "
                 "blood glucose testing and professional evaluation."
             )
         else:
             message = (
-                "The model did not identify a pattern associated with "
-                "self-reported diabetes in the survey data. "
                 "This does not rule out diabetes. Consider routine "
                 "blood glucose testing and consult a healthcare "
                 "professional if you have concerns."

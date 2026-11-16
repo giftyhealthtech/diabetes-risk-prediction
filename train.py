@@ -24,7 +24,7 @@ from sklearn.metrics import (
 # 1. CONFIGURATION
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_PATH = BASE_DIR / "brfss_survey_data_2024.csv"
+DATA_PATH = BASE_DIR / "diabetes_selected_data.csv"
 MODEL_PATH = BASE_DIR  / "diabetes_model.joblib"
 
 
