@@ -4,6 +4,7 @@ A machine learning project that uses selected variables from the **2024 Behavior
 
 The project includes data preprocessing, model training, prediction, a REST API built with FastAPI, automated tests, Docker containerization, and cloud deployment on Render.
 
+**Frontend app:** https://diabetes-risk-app-z8ke.onrender.com/
 **Live API:** https://diabetes-risk-prediction-tmkn.onrender.com  
 **API Documentation:** https://diabetes-risk-prediction-tmkn.onrender.com/docs  
 **Health Check:** https://diabetes-risk-prediction-tmkn.onrender.com/health
@@ -30,6 +31,20 @@ The final model is a **Logistic Regression classifier** with a classification th
 The 0.15 threshold prioritises recall, so the model finds most respondents who reported diabetes but also produces many false alarms (about 7 in 10 flagged respondents did not report diabetes). It is a screening-style filter, not a diagnostic tool.
 
 The model predicts membership in the self-reported diabetes class; it does not predict future diabetes development or provide a medical diagnosis.
+
+### Calibration
+
+The model's predicted probabilities were checked with a calibration curve and the Brier score.
+
+| Metric | Result |
+|---|---:|
+| Brier score (model) | 0.110 |
+| Brier score (baseline: always predict 14.9%) | 0.127 |
+
+Predicted probabilities closely match the actual share of respondents reporting diabetes, with slight over-estimation above 40%. The probability shows how many respondents with similar answers reported diabetes. It is not a prediction of future diabetes.
+
+![Calibration curve](calibration_curve.png)
+
 
 ## Dataset
 
@@ -181,55 +196,95 @@ http://127.0.0.1:8000/docs
 | GET | `/health` | Checks API health |
 | POST | `/predict` | Returns a diabetes classification prediction |
 
-### Example Prediction Request
+### Example Prediction Request with BMI
 
 ```json
 {
-  "age_group": 3,
+  "age_group": 1,
   "sex": 0,
-  "bmi": 17.1,
-  "general_health": 2,
+  "bmi": 20,
+  "general_health": 3,
   "exercise_30d": 0,
-  "smoking_status": 2,
-  "heavy_drinker": 0,
+  "smoking_status": 1,
+  "heavy_drinker": 1,
   "heart_disease": 0
 }
 ```
 
-```
+```curl
 curl -X 'POST' \
-  'https://diabetes-risk-prediction-tmkn.onrender.com/predict' \
+  'http://127.0.0.1:8000/predict' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
-  "age_group": 3,
+  "age_group": 1,
   "sex": 0,
-  "bmi": 17.1,
-  "general_health": 2,
+  "bmi": 20,
+  "general_health": 3,
   "exercise_30d": 0,
-  "smoking_status": 2,
-  "heavy_drinker": 0,
+  "smoking_status": 1,
+  "heavy_drinker": 1,
   "heart_disease": 0
 }
 ```
 
 Use the interactive `/docs` page to verify the accepted input values and submit a prediction.
 
-### Example Response
+### Example Response with BMI
 
 ```json
 {
-  "prediction": 0,
-  "probability": 0.0183,
-  "probability_percentage": "1.83%",
+  "diabetes_status": "You may not be at high risk of diabetes, as your answers are not very similar to people who reported diabetes.",
+  "chance_of_diabetes": "1.44%",
+  "explanation": "Only about 1.44% of people with answers like yours reported having diabetes, which is low.",
   "message": "This does not rule out diabetes. Consider routine blood glucose testing and consult a healthcare professional if you have concerns.",
+  "disclaimer": "This tool is for educational purposes only and is not a medical diagnostic tool."
+}
+```
+### Example Prediction Request without BMI
+
+```json
+{
+  "age_group": 11,
+  "sex": 0,
+  "general_health": 3,
+  "exercise_30d": 0,
+  "smoking_status": 2,
+  "heavy_drinker": 1,
+  "heart_disease": 1
+}
+```
+```curl
+curl -X 'POST' \
+  'http://127.0.0.1:8000/predict' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "age_group": 11,
+  "sex": 0,
+  "general_health": 3,
+  "exercise_30d": 0,
+  "smoking_status": 2,
+  "heavy_drinker": 1,
+  "heart_disease": 1
+}
+```
+
+### Example Response without BMI
+
+```json
+{
+  "diabetes_status": "You may be at risk of diabetes, as your answers are similar to people who reported diabetes.",
+  "chance_of_diabetes": "20.01%",
+  "explanation": "About 20.01% of people with answers like yours reported having diabetes, which is higher than average.",
+  "message": "This result does not confirm that you have diabetes. Please visit a healthcare facility for appropriate blood glucose testing and professional evaluation.",
   "disclaimer": "This tool is for educational purposes only and is not a medical diagnostic tool."
 }
 ```
 
 The response message may vary depending on the prediction.
 
-## Running Tests
+## Running TestsF
 
 Run the automated API tests with:
 

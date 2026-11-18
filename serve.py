@@ -1,7 +1,8 @@
+import numpy as np
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-import pandas as pd
+from typing import Optional
 
 from predict import predict
 
@@ -16,7 +17,7 @@ app = FastAPI(
 class DiabetesInput(BaseModel):
     age_group: int
     sex: int
-    bmi: float = Field(gt=0)
+    bmi: Optional[float] = Field(None, ge=10, le=100)
     general_health: int
     exercise_30d: int
     smoking_status: int
@@ -35,18 +36,41 @@ def health_check():
 @app.post("/predict")
 def make_prediction(data: DiabetesInput):
     try:
-        result = predict(data.model_dump())
+        data_dict = data.model_dump()
+
+        # If BMI is missing, the model's median imputation will fill it
+        if data_dict["bmi"] is None:
+            data_dict["bmi"] = np.nan
+
+        result = predict(data_dict)
 
         probability = float(result.iloc[0]["diabetes_probability"])
         prediction = int(result.iloc[0]["predicted_diabetes"])
+        chance = f"{probability * 100:.2f}%"
 
         if prediction == 1:
+            diabetes_status = (
+                "You may be at risk of diabetes, as your answers are "
+                "similar to people who reported diabetes."
+            )
+            explanation = (
+                f"About {chance} of people with answers like yours reported "
+                "having diabetes, which is higher than average."
+            )
             message = (
                 "This result does not confirm that you have diabetes. "
                 "Please visit a healthcare facility for appropriate "
                 "blood glucose testing and professional evaluation."
             )
         else:
+            diabetes_status = (
+                "You may not be at high risk of diabetes, as your answers are "
+                "not very similar to people who reported diabetes."
+            )
+            explanation = (
+                f"Only about {chance} of people with answers like yours reported "
+                "having diabetes, which is low."
+            )
             message = (
                 "This does not rule out diabetes. Consider routine "
                 "blood glucose testing and consult a healthcare "
@@ -54,22 +78,21 @@ def make_prediction(data: DiabetesInput):
             )
 
         return {
-            "prediction": prediction,
-            "probability": round(probability, 4),
-            "probability_percentage": f"{probability * 100:.2f}%",
+            "diabetes_status": diabetes_status,
+            "chance_of_diabetes": chance,
+            "explanation": explanation,
             "message": message,
             "disclaimer": (
                 "This tool is for educational purposes only and "
                 "is not a medical diagnostic tool."
             )
         }
-
+    
     except FileNotFoundError as error:
-        raise HTTPException(status_code=503, detail=str(error))
-
+            raise HTTPException(status_code=503, detail=str(error))
+    
     except (ValueError, TypeError) as error:
-        raise HTTPException(status_code=400, detail=str(error))
-
+            raise HTTPException(status_code=400, detail=str(error))
     
 @app.get("/disclaimer")
 def disclaimer():

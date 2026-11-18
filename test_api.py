@@ -1,6 +1,4 @@
-
 import pandas as pd
-import pytest
 from fastapi.testclient import TestClient
 
 import serve
@@ -45,12 +43,16 @@ def test_predict_success(monkeypatch):
     monkeypatch.setattr(serve, "predict", fake_predict)
 
     response = client.post("/predict", json=VALID_INPUT)
+    body = response.json()
 
     assert response.status_code == 200
-    assert response.json()["prediction"] == 1
-    assert response.json()["probability"] == 0.2345
-    assert "message" in response.json()
-    assert "disclaimer" in response.json()
+    assert "may be at risk" in body["diabetes_status"]
+    assert body["chance_of_diabetes"] == "23.45%"
+    assert "23.45%" in body["explanation"]
+    assert "message" in body
+    assert "disclaimer" in body
+    assert "prediction" not in body
+    assert "probability" not in body
 
 
 def test_predict_zero(monkeypatch):
@@ -66,9 +68,22 @@ def test_predict_zero(monkeypatch):
     monkeypatch.setattr(serve, "predict", fake_zero_prediction)
 
     response = client.post("/predict", json=VALID_INPUT)
+    body = response.json()
 
     assert response.status_code == 200
-    assert response.json()["prediction"] == 0
+    assert "may not be at high risk" in body["diabetes_status"]
+    assert body["chance_of_diabetes"] == "8.00%"
+
+
+def test_missing_bmi_is_allowed(monkeypatch):
+    monkeypatch.setattr(serve, "predict", fake_predict)
+
+    input_without_bmi = VALID_INPUT.copy()
+    del input_without_bmi["bmi"]
+
+    response = client.post("/predict", json=input_without_bmi)
+
+    assert response.status_code == 200
 
 
 def test_invalid_input(monkeypatch):
@@ -79,7 +94,7 @@ def test_invalid_input(monkeypatch):
 
     response = client.post("/predict", json=invalid_input)
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_missing_required_field():

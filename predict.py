@@ -3,12 +3,15 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from functools import lru_cache
+
 
 # MODEL_PATH = Path("diabetes_model.joblib")
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "diabetes_model.joblib"
 
 
+@lru_cache(maxsize=1)
 def load_model():
     """Load the saved model and its prediction threshold."""
 
