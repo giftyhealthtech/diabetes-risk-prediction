@@ -4,7 +4,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from predict import predict
+from predict import predict, load_model
+
 
 
 app = FastAPI(
@@ -27,11 +28,20 @@ class DiabetesInput(BaseModel):
 
 @app.get("/health")
 def health_check():
-    return {
-        "status": "200 ok",
-        "message": "Diabetes Prediction API is running"
-    }
+    try:
+        # load the model to ensure it's ready for predictions
+        load_model()
 
+        return {
+            "status": "ready",
+            "message": "Diabetes prediction model is loaded."
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model is not ready: {str(exc)}"
+        )
 
 @app.post("/predict")
 def make_prediction(data: DiabetesInput):

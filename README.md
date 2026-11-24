@@ -4,7 +4,7 @@ A machine learning project that uses selected variables from the **2024 Behavior
 
 The project includes data preprocessing, model training, prediction, a REST API built with FastAPI, automated tests, Docker containerization, and cloud deployment on Render.
 
-**Frontend app:** https://diabetes-risk-app-z8ke.onrender.com/
+**Frontend app:** https://diabetes-risk-app-z8ke.onrender.com/ 
 **Live API:** https://diabetes-risk-prediction-tmkn.onrender.com  
 **API Documentation:** https://diabetes-risk-prediction-tmkn.onrender.com/docs  
 **Health Check:** https://diabetes-risk-prediction-tmkn.onrender.com/health
